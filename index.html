@@ -8,33 +8,89 @@
     
     <!-- add this script in order to load a large set of 3D model extensions-->
     <script src="https://rawgit.com/donmccurdy/aframe-extras/master/dist/aframe-extras.loaders.min.js"></script>
+
+    <script>
+        var positions = [0,0];
+
+        function drawElements() {
+            if (positions[0] != 0 && positions[1] != 0) {
+                let newX = (positions[0].x + positions[1].x) / 2;
+                let newY = (positions[0].y + positions[1].y) / 2;
+                let newZ = (positions[0].z + positions[1].z) / 2;
+                let newCoords = newX + " " + newY + " " + newZ;
+                document.getElementById("coordDiv").innerHTML = newCoords;
+                // var element1 = document.getElementById("centerSphere");
+	            // element1.parentNode.removeChild(element);
+                let sphereEl = document.createElement('a-sphere');
+                sphereEl.id = "centerSphere";
+                sphereEl.setAttribute("position", newCoords);
+                document.querySelector('a-scene').appendChild(sphereEl);
+            }
+        }
+
+        AFRAME.registerComponent('registerevents', {
+            init: function () {
+                var marker = this.el;
+
+                marker.addEventListener('markerFound', function() {
+                    var markerId = marker.id;
+                    console.log('markerFound', markerId);
+                    switch (markerId) {
+                        case "barcode-0":
+                            positions[0] = marker.object3D.position;
+                            break;
+                        case "barcode-1":
+                            positions[1] = marker.object3D.position;
+                            break;
+                    }
+                    drawElements();
+                });
+
+                marker.addEventListener('markerLost', function() {
+                    var markerId = marker.id;
+                    console.log('markerLost', markerId);
+                    switch (markerId) {
+                        case "barcode-0":
+                            positions[0] = 0;
+                            break;
+                        case "barcode-1":
+                            positions[1] = 0;
+                            break;
+                    }
+                });
+            }
+	    });
+    </script>
+    <style>
+        .OSD {
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          width: 100%;
+          height: 5em;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          z-index: 10;
+        }
+    
+      </style>
     
     <body style='margin : 0px; overflow: hidden;'>
         <!-- we add detectionMode and matrixCodeType to tell AR.js to recognize barcode markers -->
-        <a-scene embedded arjs='sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;'>
+        <a-scene embedded arjs='sourceType: webcam; debugUIEnabled: true; detectionMode: mono_and_matrix; matrixCodeType: 3x3; sourceWidth:1280; sourceHeight:960; displayWidth: 1280; displayHeight: 960;'>
 
-        <!-- <a-assets>
-            <a-asset-item id="animated-asset" src="https://raw.githubusercontent.com/nicolocarpignoli/nicolocarpignoli.github.io/master/ar-playground/models/CesiumMan.gltf"></a-asset-item>
-        </a-assets> -->
+            <a-marker registerevents type='barcode' value='0' id="barcode-0">
+                <a-text value="0" rotation="-90 0 0" color="red" align="center" scale="5 5 1"></a-text>
+            </a-marker>
 
-        <a-marker type='barcode' value='7'>
-            <a-box position='0 0.5 0' color="yellow"></a-box>
-        </a-marker>
+            <a-marker registerevents type='barcode' value='1' id="barcode-1">
+                <a-text value="1" rotation="-90 0 0" color="red" align="center" scale="5 5 1"></a-text>
+            </a-marker>
 
-        <a-marker type='barcode' value='8'>
-            <!-- <a-box position='0 0.5 0' color="yellow"></a-box> -->
-            <a-text value="testing...!", rotation="-90 0 0"></a-text>
-        </a-marker>
-
-        <!-- <a-marker id="animated-marker" type='barcode' value='6'>
-            <a-entity
-                gltf-model="#animated-asset"
-                scale="2">
-            </a-entity>
-        </a-marker> -->
-
-        <!-- use this <a-entity camera> to support multiple-markers, otherwise use <a-marker-camera> instead of </a-marker> -->
-        <a-entity camera></a-entity>
+            <!-- use this <a-entity camera> to support multiple-markers, otherwise use <a-marker-camera> instead of </a-marker> -->
+            <a-entity camera ></a-entity>
         </a-scene>
+        <h1 id="coordDiv" style="color: red;" class="OSD">test</h1>
     </body>
 </html>
